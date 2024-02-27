@@ -1,0 +1,21 @@
+1. Provide a high-level description (ie, using minimal amount of technical
+   jargon) of the project in no more than 200 words.
+
+   The project has 3 problems which are mainly adding the support for the multiple line comments and Operators and Reserved words, and lastly is adding support
+   for Long and Double literals. For all of the problems, we first add the appropriate tokens into tokensInfo, only then we can add the support in the Scanner which
+   will then scan the tokens that we added. Since we have added some cases and Operators, we continue to edit the Scanner to complete the project.
+
+2. Did you receive help from anyone? List their names, status (classmate, 
+   CS451/651 grad, TA, other), and the nature of help received.
+
+   Name               Status       Help Received
+   ----               ------       -------------
+
+   ...                ...          ...
+
+3. List any other comments here. Feel free to provide any feedback on how
+   much you learned from doing the assignment, and whether you enjoyed
+   doing it.
+
+   It was a little confusing at first, because of scanning the tokens for multiple line comments which also scan the condition for ending the comments,
+   thus I run into some trouble there. but overall it was very enjoyable and interesting.
