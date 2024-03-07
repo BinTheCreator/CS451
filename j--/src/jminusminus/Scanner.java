@@ -189,28 +189,28 @@ class Scanner {
             if (isDigit(ch)) {
                 buffer = new StringBuffer();
                 buffer.append('.');
-                while (ch != '\n') {
+                buffer.append(ch);
+                nextCh();
+                while (isDigit(ch)) {
+                        buffer.append(ch);
+                        nextCh();
+                }
+                if (ch == 'e' || ch == 'E') {
+                    buffer.append(ch);
+                    nextCh();
+                    if (ch == '+' || ch == '-') {
+                        buffer.append(ch);
+                        nextCh();
+                    }
                     while (isDigit(ch)) {
-                        buffer.append(ch);
-                        nextCh();
-                    }
-                    if (ch == 'e' || ch == 'E') {
-                        buffer.append(ch);
-                        nextCh();
-                        if (ch == '+' || ch == '-') {
                             buffer.append(ch);
                             nextCh();
-                        }
-                        while (isDigit(ch)) {
-                            buffer.append(ch);
-                            nextCh();
-                        }
                     }
-                    if (ch == 'd' || ch == 'D') {
-                        buffer.append(ch);
-                        nextCh();
-                        return new TokenInfo(DOUBLE_LITERAL, buffer.toString(), line);
-                    }
+                }
+                if (ch == 'd' || ch == 'D') {
+                     buffer.append(ch);
+                    nextCh();
+                    return new TokenInfo(DOUBLE_LITERAL, buffer.toString(), line);
                 }
                 
                 return new TokenInfo(DOUBLE_LITERAL, buffer.toString(), line);
@@ -405,16 +405,16 @@ class Scanner {
                     nextCh();
                     return new TokenInfo(LONG_LITERAL, buffer.toString(), line);
                 } 
-                while 
-                     if (ch == '.') {
+                if (ch == '.' || ch == 'e' || ch == 'E' || ch == 'd' || ch == 'D') {
+                if (ch == '.') {
+                    buffer.append(ch);
+                    nextCh();
+                    while (isDigit(ch)) {
                         buffer.append(ch);
                         nextCh();
-                        while (isDigit(ch)) {
-                            buffer.append(ch);
-                            nextCh();
-                        }
-                        
-                    } else if (ch == 'e' || ch == 'E') {
+                    }
+                }
+                if (ch == 'e' || ch == 'E') {
                         buffer.append(ch);
                         nextCh();
                         if (ch == '+' || ch == '-') {
@@ -426,17 +426,16 @@ class Scanner {
                             nextCh();
                         } 
                     } 
-                    if (ch == 'd' || ch == 'D') {
-                        buffer.append(ch);
-                        nextCh();
-                    }
+                    
+                if (ch == 'd' || ch == 'D') {
+                    buffer.append(ch);
+                    nextCh();
                     return new TokenInfo(DOUBLE_LITERAL, buffer.toString(), line);
                 }
-                
-                
+                return new TokenInfo(DOUBLE_LITERAL, buffer.toString(), line);
+            }
+
                 return new TokenInfo(INT_LITERAL, buffer.toString(), line);
-                
-                
 
             default:
                 if (isIdentifierStart(ch)) {
