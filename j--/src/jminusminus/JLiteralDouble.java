@@ -36,6 +36,7 @@ class JLiteralDouble extends JExpression {
      */
     public JExpression analyze(Context context) {
         // TODO
+        
         return this;
     }
 

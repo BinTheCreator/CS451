@@ -154,7 +154,7 @@ class Scanner {
                 }       
             case '?':
                 nextCh();
-                return new TokenInfo(QUES, line);
+                return new TokenInfo(QUESTION, line);
             case ':':
                 nextCh();
                 return new TokenInfo(COLON, line);
@@ -265,7 +265,7 @@ class Scanner {
                     return new TokenInfo(DEC, line);
                 } else if (ch == '=') {
                     nextCh();
-                    return new TokenInfo(MIN_ASSIGN, line);
+                    return new TokenInfo(MINUS_ASSIGN, line);
                 }
                  else {
                     return new TokenInfo(MINUS, line);
@@ -282,7 +282,7 @@ class Scanner {
                 nextCh();
                 if (ch == '='){
                     nextCh();
-                    return new TokenInfo(GTEQ, line);
+                    return new TokenInfo(GE, line);
                 } else if (ch == '>') {
                     nextCh();
                     if (ch == '>') {
@@ -315,13 +315,13 @@ class Scanner {
                     }
                     return new TokenInfo(ALSHIFT, line);
                 } else {
-                    return new TokenInfo(L, line);
+                    return new TokenInfo(LT, line);
                 }
             case '!':
                 nextCh();
                 if (ch == '=') {
                     nextCh();
-                    return new TokenInfo(LNOT_ASSIGN, line);
+                    return new TokenInfo(NOT_EQUAL, line);
                 } else {
                     return new TokenInfo(LNOT, line);
                 }

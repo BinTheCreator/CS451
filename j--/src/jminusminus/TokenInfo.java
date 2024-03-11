@@ -20,12 +20,12 @@ enum TokenKind {
     LONG("long"), SWITCH("switch"), THROW("throw"), THROWS("throws"),TRY("try"),
 
     // Operators.
-    ASSIGN("="), DEC("--"), EQUAL("=="), GT(">"), INC("++"), LAND("&&"),L("<"), LE("<="), LNOT("!"),
+    ASSIGN("="), DEC("--"), EQUAL("=="), GT(">"), INC("++"), LAND("&&"),LT("<"), LE("<="), LNOT("!"),
     MINUS("-"), PLUS("+"), PLUS_ASSIGN("+="), STAR("*"),
     DIV("/"), REM("%"), ARSHIFT(">>"), ALSHIFT("<<"), LRSHIFT(">>>"),
     OR("|"), OR_ASSIGN("|="), XOR("^"), XOR_ASSIGN("^="), AND("&"), NOT("~"), LOR("||"), AND_ASSIGN("&="),
-    QUES("?"), COLON(":"), LNOT_ASSIGN("!="), DIV_ASSIGN("/="), MIN_ASSIGN("-="), STAR_ASSIGN("*="), REM_ASSIGN("%="),
-    ARSHIFT_ASSIGN(">>="),  LRSHIFT_ASSIGN(">>>="), GTEQ(">="), ALSHIFT_ASSIGN("<<="), 
+    QUESTION("?"), COLON(":"), NOT_EQUAL("!="), DIV_ASSIGN("/="), MINUS_ASSIGN("-="), STAR_ASSIGN("*="), REM_ASSIGN("%="),
+    ARSHIFT_ASSIGN(">>="),  LRSHIFT_ASSIGN(">>>="), GE(">="), ALSHIFT_ASSIGN("<<="), 
 
 
     // Separators.
