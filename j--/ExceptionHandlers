@@ -1,0 +1,9 @@
+Usage: j-- <options> <source file>
+Where possible options include:
+  -t  Only tokenize input and print tokens to STDOUT
+  -p  Only parse input and print AST to STDOUT
+  -pa Only parse and pre-analyze input and print AST to STDOUT
+  -a  Only parse, pre-analyze, and analyze input and print AST to STDOUT
+  -s  <naive|linear|graph> Generate SPIM code
+  -r  <num> Physical registers (1-18) available for allocation; default = 8
+  -d  <dir> Specify where to place output files; default = .

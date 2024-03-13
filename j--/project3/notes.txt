@@ -1,7 +1,10 @@
 1. Provide a high-level description (ie, using minimal amount of technical
    jargon) of the project in no more than 200 words.
 
-   ...
+   The project including problems which required to add support for types, operators,  conditional expressions, 
+   as well as various statements and interface declaration. By following the grammar.pdf closely, we modify Parser.java to parse them in the right places.
+   Also we need to create and add clauses to support for some of the  problems which required support.
+   
 
 2. Did you receive help from anyone? List their names, status (classmate, 
    CS451/651 grad, TA, other), and the nature of help received.
@@ -15,4 +18,5 @@
    much you learned from doing the assignment, and whether you enjoyed
    doing it.
 
-   ...
+   I was having trouble with problem 5 and 9 the most, which take more than 24 hours for me on both of the problem. Mostly I just have problem with 
+   following the logic in grammar.pdf, but after many trials, I was finally able to figure them out before the deadline for me.

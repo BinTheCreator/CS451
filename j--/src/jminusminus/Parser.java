@@ -4,6 +4,8 @@ package jminusminus;
 
 import java.util.ArrayList;
 
+import javax.swing.JLabel;
+
 import static jminusminus.TokenKind.*;
 
 /**
@@ -12,6 +14,8 @@ import static jminusminus.TokenKind.*;
  * abstract syntax tree (AST) for it.
  */
 public class Parser {
+    private static final ArrayList<JStatement> JSwitchStatement = null;
+
     // The lexical analyzer with which tokens are scanned.
     private LookaheadScanner scanner;
 
@@ -111,7 +115,11 @@ public class Parser {
      */
     private JAST typeDeclaration() {
         ArrayList<String> mods = modifiers();
-        return classDeclaration(mods);
+        if (see(CLASS)) {
+            return classDeclaration(mods);
+        } else  {
+            return interfaceDeclaration(mods);
+        }
     }
 
     /**
@@ -188,7 +196,8 @@ public class Parser {
      * Parses a class declaration and returns an AST for it.
      *
      * <pre>
-     *   classDeclaration ::= CLASS IDENTIFIER [ EXTENDS qualifiedIdentifier ] classBody
+     *   classDeclaration ::= CLASS IDENTIFIER [ EXTENDS qualifiedIdentifier ] 
+     *                     [ IMPLEMENTS qualifiedIdentifier { COMMA qualifiedIdentifier } ]  classBody
      * </pre>
      *
      * @param mods the class modifiers.
@@ -200,12 +209,36 @@ public class Parser {
         mustBe(IDENTIFIER);
         String name = scanner.previousToken().image();
         Type superClass;
+        ArrayList<TypeName> superInterfaces = null;
         if (have(EXTENDS)) {
             superClass = qualifiedIdentifier();
         } else {
             superClass = Type.OBJECT;
         }
-        return new JClassDeclaration(line, mods, name, superClass, null, classBody());
+        if (have(IMPLEMENTS)) {
+            superInterfaces = new ArrayList<TypeName>();
+            superInterfaces.add(qualifiedIdentifier());
+            while (have(COMMA)) {
+                superInterfaces.add(qualifiedIdentifier());
+            }
+        } 
+        return new JClassDeclaration(line, mods, name, superClass, superInterfaces, classBody());
+    }
+
+    private JInterfaceDeclaration interfaceDeclaration(ArrayList<String> mods) {
+        int line = scanner.token().line();
+        mustBe(INTERFACE);
+        mustBe(IDENTIFIER);
+        String name = scanner.previousToken().image();
+        ArrayList<TypeName> superInterfaces = null;
+        if (have(EXTENDS)) {
+            superInterfaces = new ArrayList<TypeName>();
+            superInterfaces.add(qualifiedIdentifier());
+            while (have(COMMA)) {
+                superInterfaces.add(qualifiedIdentifier());
+            }
+        } 
+        return new JInterfaceDeclaration(line, mods, name, superInterfaces, interfaceBody());
     }
 
     /**
@@ -223,6 +256,27 @@ public class Parser {
         while (!see(RCURLY) && !see(EOF)) {
             ArrayList<String> mods = modifiers();
             members.add(memberDecl(mods));
+        }
+        mustBe(RCURLY);
+        return members;
+    }
+    /**
+     * Parses a interface body and returns a list of members in the body.
+     *
+     * <pre>
+     *   interfaceBody ::= LCURLY { modifiers interfaceMemberDecl } RCURLY
+     * </pre>
+     *
+     * @return a list of members in the class body.
+     */
+
+    private ArrayList<JMember> interfaceBody() {
+        ArrayList<JMember> members = new ArrayList<JMember>();
+        mustBe(LCURLY);
+        while (!see(RCURLY) && !see(EOF)) {
+            ArrayList<String> mods = modifiers();
+            mods.add("abstract");
+            members.add(interfaceMemberDecl(mods));
         }
         mustBe(RCURLY);
         return members;
@@ -248,8 +302,15 @@ public class Parser {
             mustBe(IDENTIFIER);
             String name = scanner.previousToken().image();
             ArrayList<JFormalParameter> params = formalParameters();
+            ArrayList<TypeName> exceptions = null;
+            if (have(THROWS)) {
+                exceptions = new ArrayList<TypeName>();
+                do {
+                    exceptions.add(qualifiedIdentifier());
+                } while(have(COMMA));
+            }
             JBlock body = block();
-            memberDecl = new JConstructorDeclaration(line, mods, name, params, null, body);
+            memberDecl = new JConstructorDeclaration(line, mods, name, params, exceptions, body);
         } else {
             Type type = null;
             if (have(VOID)) {
@@ -258,8 +319,16 @@ public class Parser {
                 mustBe(IDENTIFIER);
                 String name = scanner.previousToken().image();
                 ArrayList<JFormalParameter> params = formalParameters();
+                ArrayList<TypeName> exceptions = null;
+                if (have(THROWS)) {
+                    exceptions = new ArrayList<TypeName>();
+                    do {
+                        
+                        exceptions.add(qualifiedIdentifier());
+                    } while(have(COMMA));
+                }
                 JBlock body = have(SEMI) ? null : block();
-                memberDecl = new JMethodDeclaration(line, mods, name, type, params, null, body);
+                memberDecl = new JMethodDeclaration(line, mods, name, type, params, exceptions, body);
             } else {
                 type = type();
                 if (seeIdentLParen()) {
@@ -267,8 +336,15 @@ public class Parser {
                     mustBe(IDENTIFIER);
                     String name = scanner.previousToken().image();
                     ArrayList<JFormalParameter> params = formalParameters();
+                    ArrayList<TypeName> exceptions = null;
+                    if (have(THROWS)) {
+                        exceptions = new ArrayList<TypeName>();
+                        do{
+                            exceptions.add(qualifiedIdentifier());
+                        } while(have(COMMA));
+                    }
                     JBlock body = have(SEMI) ? null : block();
-                    memberDecl = new JMethodDeclaration(line, mods, name, type, params, null, body);
+                    memberDecl = new JMethodDeclaration(line, mods, name, type, params, exceptions, body);
                 } else {
                     // A field.
                     memberDecl = new JFieldDeclaration(line, mods, variableDeclarators(type));
@@ -278,6 +354,68 @@ public class Parser {
         }
         return memberDecl;
     }
+/**
+     * Parses a interface declaration and returns an AST for it.
+     *
+     * <pre>
+     *   interfaceMemberDecl ::= ( VOID | type ) IDENTIFIER formalParameters
+     *                          [ THROWS qualifiedIdentifier { COMMA qualifiedIdentifier } ] SEMI
+     *                          | type variableDeclarators SEMI
+     * </pre>
+     *
+     * @param mods the interface member modifiers.
+     * @return an AST for a member declaration.
+     */
+
+     private JMember interfaceMemberDecl(ArrayList<String> mods) {
+        int line = scanner.token().line();
+        JMember interfaceMemberDecl = null;
+        Type type = null;
+            if (have(VOID)) {
+                // A void method.
+                type = Type.VOID;
+                mustBe(IDENTIFIER);
+                String name = scanner.previousToken().image();
+                ArrayList<JFormalParameter> params = formalParameters();
+                ArrayList<TypeName> exceptions = null;
+                if (have(THROWS)) {
+                    exceptions = new ArrayList<TypeName>();
+                    do {
+                        
+                        exceptions.add(qualifiedIdentifier());
+                    } while(have(COMMA));
+                }
+                mustBe(SEMI);
+                interfaceMemberDecl = new JMethodDeclaration(line, mods, name, type, params, exceptions, null);
+            } else {
+                type = type();
+                if (seeIdentLParen()) {
+                    // A non void method.
+                    mustBe(IDENTIFIER);
+                    String name = scanner.previousToken().image();
+                    ArrayList<JFormalParameter> params = formalParameters();
+                    ArrayList<TypeName> exceptions = null;
+                    if (have(THROWS)) {
+                        exceptions = new ArrayList<TypeName>();
+                        do{
+                            exceptions.add(qualifiedIdentifier());
+                        } while(have(COMMA));
+                    }
+                    mustBe(SEMI);
+                    interfaceMemberDecl = new JMethodDeclaration(line, mods, name, type, params, exceptions, null);
+                } else {
+                    // A field.
+                    interfaceMemberDecl = new JFieldDeclaration(line, mods, variableDeclarators(type));
+                    mustBe(SEMI);
+                }
+            }
+            return interfaceMemberDecl;
+        }
+        
+    
+
+
+
 
     /**
      * Parses a block and returns an AST for it.
@@ -368,22 +506,24 @@ public class Parser {
             mustBe(SEMI);
             return new JDoStatement(line, body, condition);
         } else if (have(FOR)) {
+            ArrayList<JStatement> init = null;
+            JExpression exp = null;
+            ArrayList<JStatement> update = null;
             mustBe(LPAREN);
-            if (have(SEMI)) {
-                mustBe(SEMI);
-                mustBe(RPAREN);
-                JStatement bod = statement();
-                return new JForStatement(line, null, null, null, bod);
-            } else {
-                ArrayList<JStatement> init = forInit();
-                JExpression exp = expression();
-                mustBe(SEMI);
-                ArrayList<JStatement> update = forUpdate();
-                mustBe(RPAREN);
-                JStatement bod = statement();
-                return new JForStatement(line, init, exp, update, bod);
+            if (!have(SEMI)) {
+                init = forInit();
             }
-
+            if (!have(SEMI)) {
+                exp = expression();
+                mustBe(SEMI);
+            }
+            if (!have(RPAREN)) {
+                update = forUpdate();
+                mustBe(RPAREN);
+            }
+            JStatement body = statement();
+            return new JForStatement(line, init, exp, update, body);
+        
         } else if (have(BREAK)) {
             mustBe(SEMI);
             return new JBreakStatement(line);
@@ -391,7 +531,37 @@ public class Parser {
             mustBe(SEMI);
             return new JContinueStatement(line);
         } else if (have(SWITCH)) {
-            
+            JExpression condi = parExpression();
+            mustBe(LCURLY);
+            ArrayList<SwitchStatementGroup> stmtGroup = new ArrayList<SwitchStatementGroup>();
+            boolean more = true;
+            while (more) {
+                stmtGroup.add(switchBlockStatementGroup());
+                if (see(RCURLY) || see(EOF)) {
+                    more = false;
+                }
+            }
+            mustBe(RCURLY);
+            return new JSwitchStatement(line, condi, stmtGroup);
+        } else if (have(THROW)) {
+            JExpression exp = expression();
+            mustBe(SEMI);
+            return new JThrowStatement(line, exp);
+        } else if (have(TRY)) {
+            JBlock tryBlock = block();
+            JBlock finaBlock = null;
+            ArrayList<JFormalParameter> parameters = new ArrayList<JFormalParameter>();
+            ArrayList<JBlock> catchBlocks = new ArrayList<JBlock>();
+            while (have(CATCH)) {
+                mustBe(LPAREN);
+                parameters.add(formalParameter());
+                mustBe(RPAREN);
+                catchBlocks.add(block());
+            }
+            if (have(FINALLY)) {
+                finaBlock = block();
+            }
+            return new JTryStatement(line, tryBlock, parameters, catchBlocks, finaBlock);
         }
         else {
             // Must be a statementExpression.
@@ -469,11 +639,13 @@ public class Parser {
      */
     private ArrayList<JStatement> forInit() {
         ArrayList<JStatement> list = new ArrayList<JStatement>();
+        
         if (seeLocalVariableDeclaration()) {
             list.add(localVariableDeclarationStatement());
         } else {
-            JStatement test = statementExpression(); 
+            
             do {
+                JStatement test = statementExpression(); 
                 list.add(test);
             } while (have(COMMA));
         }  
@@ -482,12 +654,44 @@ public class Parser {
 
     private ArrayList<JStatement> forUpdate() {
         ArrayList<JStatement> updateList = new ArrayList<JStatement>();
-        JStatement update = statementExpression();
+        
         do {
+            JStatement update = statementExpression();
             updateList.add(update);
         } while (have(COMMA));
         return updateList;
     }
+
+    private SwitchStatementGroup switchBlockStatementGroup() {
+        ArrayList<JExpression> labelList = new ArrayList<JExpression>();
+        ArrayList<JStatement> blockList = new ArrayList<JStatement>();
+        SwitchStatementGroup smt = new SwitchStatementGroup(labelList, blockList);
+        boolean more = true;
+        do {
+            labelList.add(switchLabel());
+        } while(have(CASE));
+        while (more) {
+            blockList.add(blockStatement());
+            if (see(CASE) || see(DEFAULT) || see(RCURLY)) {
+                more = false;
+            } 
+        }
+        return smt;
+    } 
+    private JExpression switchLabel() {
+        
+        if (have(CASE)) {
+            JExpression label = expression();
+            mustBe(COLON);
+            return label;     
+        } else {
+            mustBe(DEFAULT);
+            mustBe(COLON);
+            return null;        
+        }
+        
+    }
+
 
     /**
      * Parses a local variable declaration statement and returns an AST for it.
@@ -1366,6 +1570,7 @@ public class Parser {
 
     // Returns true if we are looking at a cast (basic or reference), and false otherwise.
     private boolean seeCast() {
+
         scanner.recordPosition();
         if (!have(LPAREN)) {
             scanner.returnToPosition();
